@@ -1,21 +1,22 @@
 import 'dotenv/config'
 import express from 'express';
+import allowCors from './middleware/allowCors.js';
 import authRouter from './routers/authRouter.js';
 import userRouter from './routers/userRouter.js';
 
 const app = express();
 
-const allowCors = (req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    next();
-};
-
 app.use(express.json());
 app.use(allowCors);
 
+app.options('*', allowCors);
+
 app.use(authRouter);
 app.use(userRouter);
+
+app.get('*', (req, res) => {
+    res.sendStatus(404);
+});
 
 const PORT = process.env.PORT || 3000;
 
