@@ -5,7 +5,7 @@ const deleteMode = true;
 
 if (deleteMode) {
     db.exec(`DROP TABLE IF EXISTS users;`);
-    db.exec(`DROP TABLE IF EXISTS addresses;`);
+    db.exec(`DROP TABLE IF EXISTS products;`);
 }
 
 db.exec(`CREATE TABLE IF NOT EXISTS users (
@@ -15,31 +15,37 @@ db.exec(`CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) NOT NULL UNIQUE
 );`);
 
-db.exec(`CREATE TABLE IF NOT EXISTS addresses (
+db.exec(`CREATE TABLE IF NOT EXISTS products (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    street_name VARCHAR(255) NOT NULL,
-    street_number INTEGER NOT NULL,
-    premise VARCHAR(255) NOT NULL,
-    city_name VARCHAR(255) NOT NULL,
-    postal_code VARCHAR(255) NOT NULL,
-    FOREIGN KEY(user_id) REFERENCES users(id)
+    name VARCHAR(255) NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    price INTEGER NOT NULL
 );`);
 
-const users = [
+const products = [
     {
-        username: 'heather',
-        password: bcrypt.hashSync('12345678', 10),
-        email: 'stephanie.hyam@bbc.co.uk'
+        name: 'Cooking spaghetti',
+        description: 'Become a master of JavaScript programming.',
+        price: 100
+    },
+    {
+        name: 'Closure with a twist',
+        description: 'How do they even function?',
+        price: 40
+    },
+    {
+        name: 'Garbage collection',
+        description: '"The environment is a living thing."',
+        price: 60
     }
 ]
 
-let sql = `INSERT INTO users (username, password, email) VALUES `;
-sql += users.map(user => {
-    return `('${user.username}', '${user.password}', '${user.email}'), `;
+let sql = `INSERT INTO products (name, description, price) VALUES `;
+sql += products.map(product => {
+    const { name, description, price } = product;
+    return `('${name}', '${description}', '${price}')`;
 }).join(', ');
 
-sql = sql.slice(0, -2);
 db.exec(sql);
 
 db.close();

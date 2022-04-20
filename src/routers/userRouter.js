@@ -19,11 +19,4 @@ router.get('/users/@me', jwtAuth, async (req, res) => {
     res.send(user);
 });
 
-// router.get('/users/:id', async (req, res) => {
-//     const user = await userStorage.findOne({
-//         id: req.params.id
-//     });
-//     res.send(user);
-// });
-
 export default router;

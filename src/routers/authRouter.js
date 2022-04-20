@@ -3,7 +3,6 @@ import storageService from '../services/storageService.js';
 import authService from '../services/authService.js';
 
 const userStorage = storageService('users');
-
 const router = Router();
 
 router.post('/auth/login', async (req, res) => {
@@ -15,15 +14,68 @@ router.post('/auth/login', async (req, res) => {
     const isValid = await authService.comparePasswords(password, hash);
 
     if (isValid) {
-        const token = authService.issueToken(user);
+        const token = authService.issueJwt(user);
         return res.send({ token });
     }
 
     res.status(400).send({
         code: 'PASSWORD_INVALID',
-        message: 'Wrong email or password.'
+        message: 'Wrong email or password'
     });
 });
+
+router.post('/auth/forgot', async (req, res) => {
+    const { email } = req.body;
+
+    if (email) {
+        const code = authService.generateOneTimeCode(email);
+        authService.sendResetPasswordEmail(email, code);
+        return res.sendStatus(204);
+    }
+
+    res.status(400).send({ message: 'Request body is malformed' });
+});
+
+router.post('/auth/reset', async (req, res) => {
+    const { password, code } = req.body;
+    
+    const subject = authService.verifyOneTimeCode(code);
+
+    if (subject) {
+        const user = await userStorage.findOne({ email: subject });
+    
+        if (user) {
+            const hash = await authService.hashPassword(password);
+            await userStorage.update({ id: user.id, password: hash });
+
+            const token = authService.issueJwt(user);
+            return res.send({ token });
+        }
+    }
+
+    res.status(400).send({ message: 'Invalid code' });
+});
+
+// router.get('/auth/verify-email', async (req, res) => {
+//     const { code, redirectTo } = req.query;
+
+//     if (code) {
+//         const subject = authService.verifyOneTimeCode(code);
+//         if (subject) {
+//             const user = await userStorage.findOne({ email: subject });
+//             user.isVerified = true;
+//             await userStorage.update(user);
+
+//             if (redirectTo) {
+//                 return res.redirect(redirectTo);
+//             }
+            
+//             return res.sendStatus(204);
+//         }
+//     }
+    
+//     res.status(400).send({ message: 'Invalid code' });
+// });
 
 router.post('/auth/register', async (req, res) => {
     const { username, password, email } = req.body;
@@ -31,9 +83,7 @@ router.post('/auth/register', async (req, res) => {
     if (username === undefined || 
         password === undefined || 
         email === undefined) {
-        return res.status(400).send({
-            message: 'Request body is malformed'
-        });
+        return res.status(400).send({ message: 'Request body is malformed' });
     }
 
     const isEmailAvailable = await userStorage.findOne({ email }) === undefined;

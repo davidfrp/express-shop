@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken';
 
 export default async (req, res, next) => {
-    const secret = process.env.JWT_SECRET;
-    const authHeader = req.headers?.authorization; // Authorization: Bearer <token>
+    const secret = process.env.ACCESS_TOKEN_SECRET;
+    const authHeader = req.headers.authorization; // Authorization: Bearer <token>
     const token = authHeader?.split(' ').pop();
 
     if (token) {
@@ -14,7 +14,6 @@ export default async (req, res, next) => {
             };
             next();
         } catch(err) {
-            console.log(err);
             return res.status(401).send({ message: 'Bad credentials' });
         }
     } else {
